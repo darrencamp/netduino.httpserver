@@ -1,6 +1,8 @@
 using Microsoft.SPOT;
 using Microsoft.SPOT.Net.NetworkInformation;
 using System;
+using System.Collections;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,10 +14,12 @@ namespace Netduino.Http
     {
         private readonly Thread _serverThread;
         private readonly int _port;
-        private HttpWebRequestHandler[] _modules;
+        private ResourceActionCollection _modules;
 
         public Server(int port)
         {
+            _modules = new ResourceActionCollection();
+            Thread.Sleep(1000);
             var interfaces = NetworkInterface.GetAllNetworkInterfaces();
             foreach (var item in interfaces)
             {
@@ -31,6 +35,11 @@ namespace Netduino.Http
             get { return _port; }
         }
 
+        public void AddRoute(string route, ResourceAction action)
+        {
+            _modules.Add(route, action);
+        }
+
         public void Start()
         {
             _serverThread.Start();
@@ -38,42 +47,24 @@ namespace Netduino.Http
 
         private void StartServer()
         {
-            using (var server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            var listener = new HttpListener("http", _port);
+            listener.Start();
+
+            while (listener.IsListening)
             {
-                server.Bind(new IPEndPoint(IPAddress.Any, Port));
-                server.Listen(1);
-
-                while (true)
+                var context = listener.GetContext();
+                new Thread(() =>
                 {
-                    var connection = server.Accept();
+                    var args = new HttpRequestReceivedEventArgs(context);
+                    var controller = _modules.Find(context.Request.RawUrl);
+                    controller.Execute(args);
 
-                    if (connection.Poll(-1, SelectMode.SelectRead))
-                    {
-                        var rawRequest = string.Empty;
-
-                        while (connection.Available > 0)
-                        {
-                            var bytes = new byte[connection.Available];
-                            var count = connection.Receive(bytes);
-                            rawRequest = rawRequest + new string(Encoding.UTF8.GetChars(bytes));
-                        }
-
-                        var request = new HttpWebRequest(rawRequest);
-                        //var modules = _modules.ModuleFor(request);
-                        // queue a thread to run all the matching modules with the request and chain the responses.
-                        // 
-                        SendResponse("HTTP/1.1 200 OK\r\nConnection: close" + "\r\n\r\n", connection);
-                        connection.Close();
-                    }
-                }
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    context.Response.KeepAlive = false;
+                    context.Response.StatusDescription = "OK";
+                    context.Response.Close();
+                }).Start();
             }
         }
-
-        private static void SendResponse(string response, Socket connection)
-        {
-            byte[] returnBytes = Encoding.UTF8.GetBytes(response);
-            connection.Send(returnBytes, 0, returnBytes.Length, SocketFlags.None);
-        }
-
     }
 }
