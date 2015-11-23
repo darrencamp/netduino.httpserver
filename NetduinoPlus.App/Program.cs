@@ -6,16 +6,16 @@ using Netduino.Http;
 using Microsoft.SPOT;
 using Microsoft.SPOT.Net.NetworkInformation;
 using System.Collections;
+using Nixie;
 
 namespace NetduinoPlus.App
 {
     public class NixieAction : ResourceAction
     {
-        private readonly object _nixieDevice;
+        private readonly NixieModule _nixieDevice;
 
         private class NixieCommand
         {
-            
             public NixieCommand(ArrayList commands)
             {
                 // high byte: command, low byte: data
@@ -31,19 +31,19 @@ namespace NetduinoPlus.App
                     var command = Convert.ToUInt16(item);
                     var operand = (byte)(command >> 8);
                     var data = (byte)(command & 0xFF);
-                    if (operand == 1) { Colour = data; }
-                    if (operand == 2) { Separator = data; }
-                    if (operand == 3) { Number = 2 ^ data; }
+                    if (operand == 1) { Colour = (NixieModule.Colour)data; }
+                    if (operand == 2) { Separator = (NixieModule.Spacer)data; }
+                    if (operand == 3) { Number = (NixieModule.Number)(2 ^ data); }
                 }
             }
             
-            public byte Colour { get; set; }
-            public int Number { get; set; }
-            public byte Separator { get; set; }
+            public NixieModule.Colour Colour { get; set; }
+            public NixieModule.Number Number { get; set; }
+            public NixieModule.Spacer Separator { get; set; }
 
 
         }
-        public NixieAction(object nixieDevice)
+        public NixieAction(NixieModule nixieDevice)
         {
             _nixieDevice = nixieDevice;
         }
@@ -54,25 +54,37 @@ namespace NetduinoPlus.App
             var commands = new ArrayList();
             var startIndex = 0;
             var commandIndex = args.Body.IndexOf("\r\n");
-            do
+            while (commandIndex > 0)
             {
-                commands.Add(args.Body.Substring(startIndex, commandIndex));
-                startIndex = commandIndex;
-                commandIndex = args.Body.IndexOf("\r\n", commandIndex);
-            } while (commandIndex != 0);
+                commands.Add(args.Body.Substring(startIndex, commandIndex-startIndex));
+                startIndex = commandIndex+2;
+                commandIndex = args.Body.IndexOf("\r\n", startIndex);
+            };
 
             var nixieCommand = new NixieCommand(commands);
-            _nixieDevice.SetColour(nixieCommand.Colour);
+            _nixieDevice.SetBackgroundColour(nixieCommand.Colour);
             _nixieDevice.SetNumber(nixieCommand.Number);
-            _nixieDevice.SetSeparator(nixieCommand.Separator);
+            _nixieDevice.SetSpacer(nixieCommand.Separator);
             _nixieDevice.Display();
         }
     }
 
     public class Program
     {
+        private static NixieModule nixie;
         public static void Main()
         {
+            var dataPin = new OutputPort(Pins.GPIO_PIN_D11, false);
+            var shiftPin = new OutputPort(Pins.GPIO_PIN_D12, false);
+            var storagePin = new OutputPort(Pins.GPIO_PIN_D13, false);
+            var brightnessPort = new PWM(PWMChannels.PWM_PIN_D10, 100.0, 0.5, false);
+            nixie = new NixieModule(
+                dataPin,
+                shiftPin,
+                storagePin,
+                brightnessPort
+            );
+
             var interfaces = NetworkInterface.GetAllNetworkInterfaces();
             Thread.Sleep(1000);
             foreach (var item in interfaces)
@@ -81,7 +93,7 @@ namespace NetduinoPlus.App
             }
 
             var srv = new Netduino.Http.Server(80);
-            srv.AddRoute("/nixie", new NixieAction());
+            srv.AddRoute("/nixie", new NixieAction(nixie));
             srv.Start();
 
             using (var led = new OutputPort(Pins.ONBOARD_LED, false))

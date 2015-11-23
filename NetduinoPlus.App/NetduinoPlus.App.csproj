@@ -42,6 +42,9 @@
     <Reference Include="Microsoft.SPOT.Hardware.SerialPort" />
     <Reference Include="Microsoft.SPOT.Native" />
     <Reference Include="Microsoft.SPOT.Net" />
+    <Reference Include="Nixie">
+      <HintPath>lib\Nixie.dll</HintPath>
+    </Reference>
     <Reference Include="SecretLabs.NETMF.Hardware" />
     <Reference Include="SecretLabs.NETMF.Hardware.NetduinoPlus" />
     <Reference Include="System" />
@@ -52,5 +55,8 @@
       <Project>{543C35F7-9686-47DC-A308-DC8FCF20BFDA}</Project>
       <Name>Netduino.Http</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="lib\" />
   </ItemGroup>
 </Project>
