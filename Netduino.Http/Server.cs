@@ -19,12 +19,6 @@ namespace Netduino.Http
         public Server(int port)
         {
             _modules = new ResourceActionCollection();
-            Thread.Sleep(1000);
-            var interfaces = NetworkInterface.GetAllNetworkInterfaces();
-            foreach (var item in interfaces)
-            {
-                Debug.Print("IP:" + item.IPAddress);
-            }
 
             _port = port;
             _serverThread = new Thread(StartServer);

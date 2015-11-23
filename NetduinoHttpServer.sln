@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netduino.Http", "Netduino.Http.csproj", "{543C35F7-9686-47DC-A308-DC8FCF20BFDA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netduino.Http", "Netduino.Http\Netduino.Http.csproj", "{543C35F7-9686-47DC-A308-DC8FCF20BFDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetduinoPlus.App", "..\NetduinoPlus.App\NetduinoPlus.App.csproj", "{557FAC3E-B9D8-430C-83FB-AC4345032274}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetduinoPlus.App", "NetduinoPlus.App\NetduinoPlus.App.csproj", "{557FAC3E-B9D8-430C-83FB-AC4345032274}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
