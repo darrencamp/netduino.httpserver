@@ -33,6 +33,8 @@
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
     <Compile Include="DebuggerBrowsableState.cs" />
+    <Compile Include="NixieAction.cs" />
+    <Compile Include="NixieFormEncodedAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
